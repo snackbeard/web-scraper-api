@@ -42,20 +42,20 @@ class WebScraperBuilder:
         })
         return self
 
-    def click(self, action_ignore_error: bool = False):
+    def click(self, ignore_error: bool = False):
         self._instructions.append({
             'action_type': ApiInstructionActionType.CLICK.value,
-            'action_ignore_error': action_ignore_error
+            'action_ignore_error': ignore_error
         })
         return self
 
-    def scroll(self, block: ApiInstructionBlockType, action_ignore_error: bool = False):
+    def scroll(self, block: ApiInstructionBlockType, ignore_error: bool = False):
         self._instructions.append({
             'action_type': ApiInstructionActionType.SCROLL.value,
             'action_value': {
                 'block': block.value
             },
-            'action_ignore_error': action_ignore_error
+            'action_ignore_error': ignore_error
         })
         return self
 

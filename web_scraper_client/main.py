@@ -12,19 +12,22 @@ def main():
         options=['--headless', '--disable-gpu', '--no-sandbox', '--disable-dev-shm-usage']
     )
 
-    page_source = WebScraperBuilder(url='https://myurl.com', api_key='c1f24ee0-1a77-4719-a33b-408069dfc15f')\
+    page_source = WebScraperBuilder(
+                        url='https://my-domain.com',
+                        api_key='c1f24ee0-1a77-4719-a33b-408069dfc15f')\
                     .wait(seconds=5,
                           by=ApiInstructionIdentificatorType.CSS_SELECTOR,
-                          wait_for=ApiInstructionElementType.ELEMENT_PRESENCE,
+                          wait_for=ApiInstructionElementType.ELEMENT_CLICKALBE,
                           element_id='button.sc-aXZVg.sc-lcIPJg.bjommA.jlhbaU.acceptAll',
                           ignore_error=True)\
-                    .click(action_ignore_error=True)\
+                    .click(ignore_error=True)\
                     .wait(seconds=10,
                           by=ApiInstructionIdentificatorType.CSS_SELECTOR,
                           wait_for=ApiInstructionElementType.ELEMENT_PRESENCE,
                           element_id='div.category-event-items')\
                     .scroll(block=ApiInstructionBlockType.END) \
-                    .get(page_url='https://www.page-to-scrape.com', options=options)
+                    .get(page_url='https://page-to-scrape.com', options=options)
+    print()
 
 if __name__ == '__main__':
     main()
