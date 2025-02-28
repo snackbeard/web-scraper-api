@@ -3,20 +3,21 @@ from requests import Response
 
 from client.enums.api_instruction_action_type import ApiInstructionActionType
 from client.enums.api_instruction_block_type import ApiInstructionBlockType
+from client.enums.api_instruction_content_type import ApiInstructionContentType
 from client.enums.api_instruction_element_type import ApiInstructionElementType
 from client.enums.api_instruction_identificator_type import ApiInstructionIdentificatorType
 from client.models.driver_options import DriverOptions
 from client.util.exceptions import ScrapeException
 
 
-class WebScraperBuilder:
+class WebScraperInstructionBuilder:
     def __init__(self, url: str, api_key: str):
         self._url = url
         self._api_key = api_key
         self._instructions: list[object] = []
 
-    def wait(self, seconds: int, by: ApiInstructionIdentificatorType, wait_for: ApiInstructionElementType,
-             element_id: str, ignore_error: bool = False):
+    def wait_for(self, seconds: int, by: ApiInstructionIdentificatorType, wait_for: ApiInstructionElementType,
+                 element_id: str, ignore_error: bool = False):
         self._instructions.append({
             'action_type': ApiInstructionActionType.WAIT.value,
             'action_value': {
@@ -57,7 +58,20 @@ class WebScraperBuilder:
         })
         return self
 
-    def get(self, page_url: str, options: DriverOptions | None = None) -> Response:
+    def wait(self, seconds: int):
+        self._instructions.append({
+            'action_type': ApiInstructionActionType.WAIT.value,
+            'action_value': {
+                'seconds': seconds
+            }
+        })
+        return self
+
+    def get(self, page_url: str,
+            content: ApiInstructionContentType = ApiInstructionContentType.PAGE_SOURCE,
+            xhr_name: str = None,
+            options: DriverOptions | None = None) -> Response:
+
         headers = {
             'Content-Type': 'application/json',
             'x-api-key': self._api_key
@@ -66,15 +80,19 @@ class WebScraperBuilder:
         data = {
             'url': page_url,
             'options': options.__dict__() if options is not None else None,
+            'content_type': content.value,
+            'xhr_name': xhr_name,
             'instructions': self._instructions
         }
 
-        response = requests.post(url=f'{self._url}/api/v1/query', json=data, headers=headers)
+        response = requests.post(url=f'{self._url}/api/v1/instructions', json=data, headers=headers)
+
+        if response.status_code == 400:
+            raise ScrapeException(response.text)
 
         if response.status_code == 500:
             raise ScrapeException(response.text)
 
         response.raise_for_status()
 
-        return response.json()['response']
-
+        return response.json()['scraped_content']
