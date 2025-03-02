@@ -90,6 +90,7 @@ page_source = WebScraperInstructionBuilder(url='api-url',
                           by=ApiInstructionIdentificatorType.CSS_SELECTOR,
                           element_id='button.sc-aXZVg.sc-lcIPJg.fkTzLw.jlhbaU.acceptAll',
                           ignore_error=True)\
+                .click(ignore_error=True)\
                 .wait_for(seconds=10,
                             wait_for=ApiInstructionElementType.ELEMENT_PRESENCE,
                             by=ApiInstructionIdentificatorType.CSS_SELECTOR,
