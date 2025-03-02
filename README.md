@@ -83,21 +83,23 @@ options = DriverOptions(user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) Ap
     '--disable-dev-shm-usage'
 ])
 
-page_source = WebScraperInstructionBuilder(url='api-url', api_key='api-key').wait_for(seconds=10,
-                                                                        wait_for=ApiInstructionElementType.ELEMENT_CLICKALBE,
-                                                                        by=ApiInstructionIdentificatorType.CSS_SELECTOR,
-                                                                        element_id='button.sc-aXZVg.sc-lcIPJg.fkTzLw.jlhbaU.acceptAll',
-                                                                        ignore_error=True)\
-                                                                .wait_for(seconds=10,
-                                                                          wait_for=ApiInstructionElementType.ELEMENT_PRESENCE,
-                                                                          by=ApiInstructionIdentificatorType.CSS_SELECTOR,
-                                                                          element_id='div.sc-iwOjIX.cPJSFQ.events-list')\
-                                                                .wait(seconds=1)\
-                                                                .scroll(ApiInstructionBlockType.END)\
-                                                                .wait(seconds=1)\
-                                                                .find(by=ApiInstructionIdentificatorType.CSS_SELECTOR, element_id='div.sc-PXPPG.hIImXk')\
-                                                                .scroll(ApiInstructionBlockType.START)\
-                                                                .get(page_url='page-to-scrape-url', options=options, content=ApiInstructionContentType.PAGE_SOURCE)
+page_source = WebScraperInstructionBuilder(url='api-url', 
+                                           api_key='api-key')\
+                .wait_for(seconds=10, 
+                          wait_for=ApiInstructionElementType.ELEMENT_CLICKALBE,
+                          by=ApiInstructionIdentificatorType.CSS_SELECTOR,
+                          element_id='button.sc-aXZVg.sc-lcIPJg.fkTzLw.jlhbaU.acceptAll',
+                          ignore_error=True)\
+                .wait_for(seconds=10,
+                            wait_for=ApiInstructionElementType.ELEMENT_PRESENCE,
+                            by=ApiInstructionIdentificatorType.CSS_SELECTOR,
+                            element_id='div.sc-iwOjIX.cPJSFQ.events-list')\
+                .wait(seconds=1)\
+                .scroll(ApiInstructionBlockType.END)\
+                .wait(seconds=1)\
+                .find(by=ApiInstructionIdentificatorType.CSS_SELECTOR, element_id='div.sc-PXPPG.hIImXk')\
+                .scroll(ApiInstructionBlockType.START)\
+                .get(page_url='page-to-scrape-url', options=options, content=ApiInstructionContentType.PAGE_SOURCE)
 ~~~
 
 ### Client Library
