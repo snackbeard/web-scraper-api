@@ -1,5 +1,107 @@
+### Goal
+This project aims to simplify the webscraping process with Selenium by providing an easy to use client library to access
+a self hosted instance of **Selenium Grid**.  
+
+---
+
+Standard usage:
+~~~python
+import logging
+import time
+
+from selenium import webdriver
+from selenium.common import TimeoutException, JavascriptException
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions
+from selenium.webdriver.support.wait import WebDriverWait
+
+chrome_options: Options = Options()
+chrome_options.add_argument("--headless")
+chrome_options.add_argument("--disable-gpu")
+chrome_options.add_argument("--no-sandbox")
+chrome_options.add_argument("--disable-dev-shm-usage")
+chrome_options.add_argument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36")
+chrome_options.set_capability('goog:loggingPrefs', {'performance': 'ALL'})
+
+service: Service = Service('/path/to/chromedriver')
+driver: webdriver.Chrome = webdriver.Chrome(service=service, options=chrome_options)
+
+driver.get('https://my-url.com')
+
+try:
+    # accept cookies
+    cookie_button = WebDriverWait(driver, 10).until(
+        expected_conditions.element_to_be_clickable((
+            By.CSS_SELECTOR,
+            'button.sc-aXZVg.sc-lcIPJg.fkTzLw.jlhbaU.acceptAll'
+        ))
+    )
+    driver.execute_script('arguments[0].click();', cookie_button)
+except TimeoutException as e:
+    logging.info('element not present')
+
+try:
+    # wait for page to load
+    WebDriverWait(driver, 10).until(
+        expected_conditions.presence_of_element_located((By.CSS_SELECTOR, 'div.sc-iwOjIX.cPJSFQ.events-list'))
+    )
+
+    time.sleep(1)
+
+    # scroll down a bit
+    element_to_scroll = driver.find_element(By.CSS_SELECTOR, 'div.sc-iwOjIX.cPJSFQ.events-list')
+    driver.execute_script('arguments[0].scrollIntoView({block: "end"});', element_to_scroll)
+
+    time.sleep(1)
+
+    element_to_scroll = driver.find_element(By.CSS_SELECTOR, 'div.sc-PXPPG.hIImXk')
+    driver.execute_script('arguments[0].scrollIntoView({block: "start"});', element_to_scroll)
+
+except TimeoutException | JavascriptException as e:
+    logging.info('error')
+
+page_source = driver.page_source
+~~~
+
+---
+
+With client library:
+~~~python
+from client.enums.api_instruction_block_type import ApiInstructionBlockType
+from client.enums.api_instruction_content_type import ApiInstructionContentType
+from client.enums.api_instruction_element_type import ApiInstructionElementType
+from client.enums.api_instruction_identificator_type import ApiInstructionIdentificatorType
+from client.models.driver_options import DriverOptions
+from client.webscraper_instruction_builder import WebScraperInstructionBuilder
+
+options = DriverOptions(user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36', options=[
+    '--headless',
+    '--disable-gpu',
+    '--no-sandbox',
+    '--disable-dev-shm-usage'
+])
+
+page_source = WebScraperInstructionBuilder(url='api-url', api_key='api-key').wait_for(seconds=10,
+                                                                        wait_for=ApiInstructionElementType.ELEMENT_CLICKALBE,
+                                                                        by=ApiInstructionIdentificatorType.CSS_SELECTOR,
+                                                                        element_id='button.sc-aXZVg.sc-lcIPJg.fkTzLw.jlhbaU.acceptAll',
+                                                                        ignore_error=True)\
+                                                                .wait_for(seconds=10,
+                                                                          wait_for=ApiInstructionElementType.ELEMENT_PRESENCE,
+                                                                          by=ApiInstructionIdentificatorType.CSS_SELECTOR,
+                                                                          element_id='div.sc-iwOjIX.cPJSFQ.events-list')\
+                                                                .wait(seconds=1)\
+                                                                .scroll(ApiInstructionBlockType.END)\
+                                                                .wait(seconds=1)\
+                                                                .find(by=ApiInstructionIdentificatorType.CSS_SELECTOR, element_id='div.sc-PXPPG.hIImXk')\
+                                                                .scroll(ApiInstructionBlockType.START)\
+                                                                .get(page_url='page-to-scrape-url', options=options, content=ApiInstructionContentType.PAGE_SOURCE)
+~~~
+
 ### Client Library
-The client library makes it easy to access the API by providing a builder class.  
+The client library makes it easy to access the API by providing a builder class.
 **Example:**
 ~~~python
     options = DriverOptions(
@@ -58,10 +160,11 @@ The following actions are currently supported
 ---
 
 ### API
-This API is using **FastAPI**, **Selenium** and **chromedriver** and takes a list of instructions
-and calls the corresponding selenium functions to control the chromedriver.
-To run it in a Docker Container build an image with the corresponding Dockerfile.
-  
+This API is using **FastAPI** and **Selenium Grid** and takes a list of instructions
+and calls the corresponding selenium functions to control the browser. By default
+there is no authentication with Selenium Grid so the API provides a simple check for an api-key. Only the API
+is exposed, Selenium Grid itself is not.
+
 Docker Compose
 ~~~yaml
 version: "3.5"
@@ -99,14 +202,7 @@ networks:
 
 ~~~
 
-When running in docker make sure to use **always** specify the following options otherwise it
-will not work
-~~~python
-    options = DriverOptions(
-        user_agent='...',
-        options=['--headless', '--disable-gpu', '--no-sandbox', '--disable-dev-shm-usage']
-    )
-~~~
+The above configuration only provides one node. To deploy multiple nodes check the Selenium docs: https://github.com/SeleniumHQ/docker-selenium
 
 ---
 
