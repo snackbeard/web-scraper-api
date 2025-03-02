@@ -1,3 +1,4 @@
+import logging
 import os
 
 
@@ -10,7 +11,8 @@ def get_key(key: str):
 
 class Configuration:
     def __init__(self):
+        self.webdriver_remote_host = get_key('WEBDRIVER_REMOTE_HOST')
         self.host = get_key('HOST')
         self.port = int(get_key('PORT'))
-        self.driver_path = get_key('DRIVER_PATH')
         self.api_key = get_key('X-API-KEY')
+        self.log_level = logging.getLevelNamesMapping().get(get_key('LOG_LEVEL'))

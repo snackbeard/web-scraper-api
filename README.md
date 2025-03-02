@@ -67,16 +67,36 @@ Docker Compose
 version: "3.5"
 
 services:
-  webscraper:
-    image: webscraper:0.5
-    container_name: webscraper
+  webscraper-api:
+    image: webscraper-api
+    container_name: webscraper-api
     environment:
       HOST: 0.0.0.0
-      PORT: <PORT>
-      X-API-KEY: <define API-KEY here>
-      DRIVER_PATH: /usr/local/bin/chromedriver
+      PORT: 8081
+      X-API-KEY: c1f24ee0-1a77-4719-a33b-408069dfc15f
+      LOG_LEVEL: INFO
+      WEBDRIVER_REMOTE_HOST: http://selenium-chrome:4444/wd/hub
     ports:
-      - 8081:8081
+      - "8081:8081"
+    networks:
+      - scraping-network
+    depends_on:
+      - selenium-chrome
+
+  selenium-chrome:
+    image: selenium/standalone-chrome
+    container_name: selenium-chrome
+    shm_size: 2g
+    networks:
+      - scraping-network
+    # ports:
+      # - "4444:4444"
+      # - "7900:7900"
+
+networks:
+  scraping-network:
+    driver: bridge
+
 ~~~
 
 When running in docker make sure to use **always** specify the following options otherwise it
