@@ -70,7 +70,7 @@ class WebScraperInstructionBuilder:
     def get(self, page_url: str,
             content: ApiInstructionContentType = ApiInstructionContentType.PAGE_SOURCE,
             xhr_name: str = None,
-            options: DriverOptions | None = None) -> Response:
+            options: DriverOptions = DriverOptions('', [])) -> Response:
 
         headers = {
             'Content-Type': 'application/json',
