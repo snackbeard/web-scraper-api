@@ -1,12 +1,11 @@
 import json
 import logging
-import time
+from json import JSONDecodeError
 
 import uvicorn
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import JSONResponse
-from selenium.common import WebDriverException
 from selenium import webdriver
 
 from api.api_instruction_reader import ApiInstructionReader
@@ -31,7 +30,7 @@ def scrape_webpage(query: Query, request: Request) -> JSONResponse:
     if query.content_type == ApiInstructionContentType.XHR and query.xhr_name is None:
         raise HTTPException(status_code=400, detail='With XHR a document name has to be specified')
 
-    driver: webdriver.Chrome = Scraper(webdriver_remote_host=configuration.webdriver_remote_host).get(driver_options=query.options)
+    driver: webdriver.Remote = Scraper(webdriver_remote_host=configuration.webdriver_remote_host).get(driver_options=query.options)
     driver.get(url=query.url)
 
     last_element = None
@@ -63,29 +62,21 @@ def scrape_webpage(query: Query, request: Request) -> JSONResponse:
 
                             logging.info(f'found {query.xhr_name}, request_id: {request_id}')
 
-                            response_body = _get_response_body(driver, request_id)
+                            response_body = driver.execute_cdp_cmd('Network.getResponseBody', {'requestId': request_id})
                             return JSONResponse(content={
                                 'scraped_content': json.loads(response_body['body'])
                             })
-                except KeyError as ke:
+                except KeyError:
                     pass
-                except ScrapeException as se:
+                except ScrapeException:
                     raise HTTPException(status_code=400, detail='No resource with given identifier found')
+                except JSONDecodeError:
+                    raise HTTPException(status_code=400, detail='XHR content cannot be parsed to json')
 
             raise HTTPException(status_code=400, detail='No file found')
 
     finally:
         driver.quit()
-
-def _get_response_body(driver: webdriver.Chrome, request_id: float, max_retries: int = 5, delay: int = 1):
-    for attempt in range(max_retries):
-        try:
-            return driver.execute_cdp_cmd('Network.getResponseBody', {'requestId': request_id})
-        except WebDriverException as e:
-            logging.info(f'Attempt {attempt + 1}: Failed to get response body - {e}')
-            time.sleep(delay)
-
-    raise ScrapeException(message='No resource with given identifier found')
 
 @app.exception_handler(Exception)
 async def internal_server_error_handler(request: Request, exc: Exception):

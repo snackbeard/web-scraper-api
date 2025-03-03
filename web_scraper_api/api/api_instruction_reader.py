@@ -1,3 +1,4 @@
+import logging
 import time
 
 from selenium.common.exceptions import TimeoutException, JavascriptException
@@ -24,6 +25,7 @@ class ApiInstructionReader:
                     value.wait_for.webdriver_value((value.by.webdriver_value, value.id))
                 )
             except TimeoutException as e:
+                logging.error(f'timeout while waiting for {value.id}')
                 if not instruction.action_ignore_error:
                     raise ScrapeException(f'Timeout while waiting for {value.id}')
 
@@ -33,6 +35,7 @@ class ApiInstructionReader:
             try:
                 return driver.find_element(value.by.webdriver_value, value.id)
             except TimeoutException as e:
+                logging.error(f'timeout while waiting for {value.id}')
                 if not instruction.action_ignore_error:
                     raise ScrapeException(f'Could not find {value.id}')
 
@@ -41,6 +44,7 @@ class ApiInstructionReader:
             try:
                 driver.execute_script('arguments[0].click();', element)
             except JavascriptException as e:
+                logging.error(f'Could not click the element from the previous instruction: {str(instruction_index - 1)}: {e}')
                 if not instruction.action_ignore_error:
                     raise ScrapeException(
                         f'Could not click the element from the previous instruction: {str(instruction_index - 1)}')
@@ -55,4 +59,5 @@ class ApiInstructionReader:
             value: ApiInstructionWait = ApiInstructionWait.model_validate(instruction.action_value)
             time.sleep(value.seconds)
         else:
+            logging.error(f'Unknown action type {instruction.action_type}')
             raise ScrapeException(f'Unknown action type {instruction.action_type}')

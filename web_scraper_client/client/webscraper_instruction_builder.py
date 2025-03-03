@@ -19,7 +19,7 @@ class WebScraperInstructionBuilder:
     def wait_for(self, seconds: int, by: ApiInstructionIdentificatorType, wait_for: ApiInstructionElementType,
                  element_id: str, ignore_error: bool = False):
         self._instructions.append({
-            'action_type': ApiInstructionActionType.WAIT.value,
+            'action_type': ApiInstructionActionType.WAIT_FOR.value,
             'action_value': {
                 'seconds': seconds,
                 'by': by.value,
